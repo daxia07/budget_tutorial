@@ -71,7 +71,8 @@ var budgetUI = (() => {
     budgetMonth: '.budget__title--month',
     item_add: '.add__btn',
     item_delete: '.container',
-    btn_delete: '.ion-ios-close-outline',
+    btn_delete: 'ion-ios-close-outline',
+    expense_percentage: '.budget__expenses--percentage',
     item_html: ({
         type,
         id,
@@ -92,6 +93,7 @@ var budgetUI = (() => {
     } else {
       throw new Error('unexpected type!')
     }
+    value = parseFloat(Math.round(value * 100) / 100).toFixed(2);
     new_item = DOM.item_html({
       type,
       value,
@@ -104,10 +106,22 @@ var budgetUI = (() => {
     document.querySelector(DOM.input.value).value = '';
   };
 
+  const numFormatter = num => {
+    let [d, f] = parseFloat(Math.round(num * 100) / 100).toFixed(2).split('.');
+    d = d.replace(/\B(?=(\d{3})+(?!\d))/g, ",");
+    return d + '.' + f
+  };
+
   const updateTotal = (totalIncome, totalExpense) => {
-    document.querySelector(DOM.budgetValue).textContent = totalIncome - totalExpense;
-    document.querySelector(DOM.budgetIncome).textContent = totalIncome;
-    document.querySelector(DOM.budgetExpense).textContent = totalExpense;
+    document.querySelector(DOM.budgetValue).textContent = numFormatter(totalIncome - totalExpense);
+    document.querySelector(DOM.budgetIncome).textContent = numFormatter(totalIncome);
+    document.querySelector(DOM.budgetExpense).textContent = numFormatter(totalExpense);
+    if (totalIncome !== 0) {
+      document.querySelector(DOM.expense_percentage).textContent = Math.round(totalExpense / totalIncome * 100).toString() + '%';
+      document.querySelector(DOM.expense_percentage).style.opacity = 1;
+    } else {
+      document.querySelector(DOM.expense_percentage).style.opacity = 0;
+    }
   };
 
   const updateMonth = () => {
@@ -116,8 +130,7 @@ var budgetUI = (() => {
     ];
     const d = new Date();
     document.querySelector(DOM.budgetMonth).textContent = monthNames[d.getMonth()]
-  }
-
+  };
 
   return {
     updateUI: (type, des, value) => {
@@ -157,7 +170,7 @@ var controller = (model, ui) => {
   };
 
   const deleteItem = (event) => {
-    if (event.target.className !== DOM.butDelete) {
+    if (event.target.className !== DOM.btn_delete) {
       return
     }
     itemDelete = event.target.parentNode.parentNode.parentNode.parentNode;
